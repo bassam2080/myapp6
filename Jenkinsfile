@@ -17,8 +17,12 @@
 
     stage('Pull , build and Run dockerfile ') {
       steps {
-        sh '''docker pull bassam2080/myapp6:1.1
-              docker run -d --name myapp6  -p 5000:80 bassam2080/myapp6:1.1
+       
+
+          docker stop myapp6 || true
+		        docker rm myapp6 || true
+		        docker rmi bassam2080/myapp6 || true
+		        docker build -t bassam2080/myapp6:1.1 
         
         '''
       }
