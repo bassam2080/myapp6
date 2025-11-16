@@ -17,17 +17,9 @@ pipeline {
       }
     }
 
-stage('Pull , build and Run dockerfile ') {
+  stage('Pull images') {
       steps {
-       
-      sh '''
-                docker stop myapp4-web || true
-		        docker rm myapp4-web || true
-		        docker rmi bassam2080/myapp4-web || true
-		        docker build -t bassam2080/myapp4-web  . 
-				  
-        
-        '''
+        sh 'docker compose pull'
       }
     }
       
