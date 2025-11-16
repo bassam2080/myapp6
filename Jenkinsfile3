@@ -3,17 +3,11 @@ pipeline {
 
   environment {
     IMAGE_NAME = 'bassam2080/myapp4-web'
-    DOCKERHUB = credentials('dockerHub')   // gives DOCKERHUB_USR, DOCKERHUB_PSW
+    DOCKERHUB = credentials('DockerHub')
   }
 
   stages {
-    stage('Checkout') {
-      steps {
-        git 'https://github.com/bassam2080/myapp6.git'
-      }
-    }
-
-    stage('Build image') {
+        stage('Build image') {
       steps {
         sh '''
           docker build \
