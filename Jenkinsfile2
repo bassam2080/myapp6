@@ -7,12 +7,7 @@ pipeline {
     DOCKERHUB = credentials('DockerHub')
   }
 
-  stages {
-    stage('Checkout') {
-      steps {
-        git 'https://github.com/bassam2080/myapp6.git'    
-      }
-    }
+  
 
     stage('Docker Login') {
       steps {
