@@ -24,13 +24,19 @@ pipeline {
       # Clean up old container if it exists
       docker rm -f myapp4-smoke || true
 
-      # Run container for smoke test on a different port
-      docker run -d -p 8082:80 --name myapp4-smoke ${IMAGE_NAME}:${BUILD_NUMBER}
+      # Run container for smoke test WITHOUT publishing a host port
+      docker run -d --name myapp4-smoke ${IMAGE_NAME}:${BUILD_NUMBER}
 
+      # give container a few seconds to start
       sleep 15
 
+      # Get the container's IP address on the Docker network
+      IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' myapp4-smoke)
+      echo "Smoke test hitting http://$IP/"
+
       set +e
-      curl -f http://localhost:8082/ > /dev/null 2>&1
+      # --noproxy '*' so any Jenkins HTTP proxy is bypassed
+      curl -f --noproxy '*' http://$IP/ > /dev/null 2>&1
       STATUS=$?
       set -e
 
@@ -46,6 +52,7 @@ pipeline {
     '''
   }
 }
+
 
 
 
