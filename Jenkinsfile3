@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     IMAGE_NAME = 'bassam2080/myapp4-web'
-    DOCKERHUB = credentials('dockerhub-creds')   // gives DOCKERHUB_USR, DOCKERHUB_PSW
+    DOCKERHUB = credentials('dockerHub')   // gives DOCKERHUB_USR, DOCKERHUB_PSW
   }
 
   stages {
