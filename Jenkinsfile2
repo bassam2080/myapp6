@@ -7,7 +7,7 @@ pipeline {
     DOCKERHUB = credentials('DockerHub')
   }
 
-  
+  stages{
 
     stage('Docker Login') {
       steps {
@@ -31,4 +31,4 @@ pipeline {
       }
     }
   }
-
+}
