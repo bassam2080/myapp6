@@ -18,33 +18,37 @@ pipeline {
       }
     }
 
-    stage('Smoke test') {
-      steps {
-        sh '''
-          # Run container from the image we just built
-          CID=$(docker run -d -p 8081:80 --name myapp4-smoke ${IMAGE_NAME}:${BUILD_NUMBER})
+     stage('Smoke test') {
+  steps {
+    sh '''
+      # Clean up old container if it exists
+      docker rm -f myapp4-smoke || true
 
-          # give container a few seconds to start
-          sleep 15
+      # Run container for smoke test on a different port than production
+      docker run -d -p 8082:80 --name myapp4-smoke ${IMAGE_NAME}:${BUILD_NUMBER}
 
-          # simple HTTP check – fail pipeline if non-200
-          set +e
-          curl -f http://localhost:8081/ > /dev/null 2>&1
-          STATUS=$?
-          set -e
+      # give container a few seconds to start
+      sleep 15
 
-          if [ "$STATUS" -ne 0 ]; then
-            echo "Smoke test FAILED"
-            docker logs myapp4-smoke || true
-            docker rm -f myapp4-smoke || true
-            exit 1
-          fi
+      # simple HTTP check – fail pipeline if non-200
+      set +e
+      curl -f http://localhost:8082/ > /dev/null 2>&1
+      STATUS=$?
+      set -e
 
-          echo "Smoke test PASSED"
-          docker rm -f myapp4-smoke || true
-        '''
-      }
-    }
+      # Always clean up the smoke-test container
+      docker rm -f myapp4-smoke || true
+
+      if [ "$STATUS" -ne 0 ]; then
+        echo "Smoke test FAILED"
+        exit 1
+      fi
+
+      echo "Smoke test PASSED"
+    '''
+  }
+}
+
 
     stage('Docker login') {
       steps {
