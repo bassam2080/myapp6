@@ -28,6 +28,7 @@ pipeline {
       steps {
        // runs the same stack of dependensies as your local machine
         sh 'docker compose up -d'
+        sh 'docker compose down'
       }
     }
   }
