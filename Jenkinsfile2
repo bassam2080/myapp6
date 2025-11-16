@@ -17,12 +17,20 @@ pipeline {
       }
     }
 
-    stage('Pull images') {
+stage('Pull , build and Run dockerfile ') {
       steps {
-        //docker compose pull → gets bassam2080/myapp4-web:1.0 + mysql
-        sh 'docker compose pull'
+       
+      sh '''
+                docker stop myapp4 || true
+		        docker rm myapp4 || true
+		        docker rmi bassam2080/myapp4 || true
+		        docker build -t bassam2080/myapp4-web  . 
+				  
+        
+        '''
       }
     }
+      
 
     stage('Deploy') {
       steps {
