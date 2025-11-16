@@ -1,0 +1,82 @@
+pipeline {
+  agent any
+
+  environment {
+    IMAGE_NAME = 'bassam2080/myapp4-web'
+    DOCKERHUB = credentials('dockerhub-creds')   // gives DOCKERHUB_USR, DOCKERHUB_PSW
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/bassam2080/myapp6.git'
+      }
+    }
+
+    stage('Build image') {
+      steps {
+        sh '''
+          docker build \
+            -t ${IMAGE_NAME}:${BUILD_NUMBER} \
+            -t ${IMAGE_NAME}:latest \
+            .
+        '''
+      }
+    }
+
+    stage('Smoke test') {
+      steps {
+        sh '''
+          # Run container from the image we just built
+          CID=$(docker run -d -p 8081:80 --name myapp4-smoke ${IMAGE_NAME}:${BUILD_NUMBER})
+
+          # give container a few seconds to start
+          sleep 15
+
+          # simple HTTP check – fail pipeline if non-200
+          set +e
+          curl -f http://localhost:8081/ > /dev/null 2>&1
+          STATUS=$?
+          set -e
+
+          if [ "$STATUS" -ne 0 ]; then
+            echo "Smoke test FAILED"
+            docker logs myapp4-smoke || true
+            docker rm -f myapp4-smoke || true
+            exit 1
+          fi
+
+          echo "Smoke test PASSED"
+          docker rm -f myapp4-smoke || true
+        '''
+      }
+    }
+
+    stage('Docker login') {
+      steps {
+        sh '''
+          echo "${DOCKERHUB_PSW}" | \
+            docker login -u "${DOCKERHUB_USR}" --password-stdin
+        '''
+      }
+    }
+
+    stage('Push image') {
+      steps {
+        sh '''
+          
+          docker push ${IMAGE_NAME}:latest
+        '''
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        sh '''
+          docker compose pull
+          docker compose up -d
+        '''
+      }
+    }
+  }
+}
