@@ -21,9 +21,9 @@ stage('Pull , build and Run dockerfile ') {
       steps {
        
       sh '''
-                docker stop myapp4 || true
-		        docker rm myapp4 || true
-		        docker rmi bassam2080/myapp4 || true
+                docker stop myapp4-web || true
+		        docker rm myapp4-web || true
+		        docker rmi bassam2080/myapp4-web || true
 		        docker build -t bassam2080/myapp4-web  . 
 				  
         
