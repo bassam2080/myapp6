@@ -5,7 +5,7 @@ pipeline {
         // DockerHub username/password credential
         DOCKERHUB_CREDENTIALS = credentials('DockerHub')
 
-        EC2_HOST = 'ec2-3-238-125-170.compute-1.amazonaws.com'
+        EC2_HOST = '3.238.125.170'
         EC2_USER = 'ec2-user'
     }
 
