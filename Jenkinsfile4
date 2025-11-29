@@ -1,1 +1,88 @@
 
+ pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('DockerHub')// use your docker id
+        EC2_SSH_CREDENTIALS = credentials('AmzonEC2Webserver2') // Replace with your actual credentials ID
+        EC2_HOST = 'ec2-3-238-125-170.compute-1.amazonaws.com' // Replace with your EC2 instance IP or hostname
+        EC2_USER = 'ec2-user' // Replace with your EC2 username (e.g., 'ubuntu' for Ubuntu instances or Ec2-user)
+    }
+
+    stages {
+        stage('Docker Login') {
+            steps {
+                sh '''
+                    echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login -u "$DOCKERHUB_CREDENTIALS_USR" --password-stdin
+                '''
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                sh '''
+                    docker stop bassam2080/myapp4-web || true
+                    docker rm bassam2080/myapp4-web || true
+                    docker rmi bassam2080/myapp4-web || true
+                    docker build -t bassam2080/myapp4-web .
+                    docker push bassam2080/myapp4-web
+                '''
+            }
+        }
+
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['EC2_SSH_CREDENTIALS']) { // Use the correct ID of your SSH credentials
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
+# Update and upgrade packages
+sudo yum upgrade -y
+
+
+
+# Install Docker if not installed
+if ! command -v docker &> /dev/null
+then
+    # For Amazon Linux 2, docker comes from extras
+    if command -v amazon-linux-extras &> /dev/null; then
+        sudo amazon-linux-extras install docker -y
+    else
+        sudo yum install -y docker
+    fi
+
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    sudo usermod -aG docker ${EC2_USER}
+fi
+
+# Pull the latest Docker image
+docker pull  bassam2080/myapp4-web
+
+# Stop and remove existing container if it exists
+docker stop  bassam2080/myapp4-web || true
+docker rm  bassam2080/myapp4-web || true
+
+# Run the new container
+docker run -d --name myapp-container -p 5000:80  bassam2080/myapp4-web
+EOF
+                    '''
+                }
+            }
+        }
+
+        stage('Clean') {
+            steps {
+                echo "Cleaning up..."
+                // Uncomment if you need to bring down Docker Compose services
+                // sh 'docker compose down'
+            }
+        }
+    }
+
+    post {
+        always {
+            // Optional: Add any cleanup or notification steps here
+            echo "Pipeline completed."
+        }
+    }
+}
