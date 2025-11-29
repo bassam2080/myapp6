@@ -4,7 +4,7 @@
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('DockerHub')// use your docker id
-        EC2_SSH_CREDENTIALS = credentials('AmzonEC2Webserver2') // Replace with your actual credentials ID
+        EC2_SSH_CREDENTIALS = 'AmzonEC2Webserver2' // Replace with your actual credentials ID
         EC2_HOST = 'ec2-3-238-125-170.compute-1.amazonaws.com' // Replace with your EC2 instance IP or hostname
         EC2_USER = 'ec2-user' // Replace with your EC2 username (e.g., 'ubuntu' for Ubuntu instances or Ec2-user)
     }
