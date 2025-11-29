@@ -1,1 +1,33 @@
 
+pipeline {
+    agent any
+
+    environment {
+        // DockerHub username/password credential
+        DOCKERHUB_CREDENTIALS = credentials('DockerHub')
+
+        // EC2 connection details
+        EC2_HOST = 'ec2-3-238-125-170.compute-1.amazonaws.com'
+        EC2_USER = 'ec2-user'
+    }
+
+    stages {
+        stage('Docker Login') {
+            steps {
+                sh '''
+                    echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login -u "$DOCKERHUB_CREDENTIALS_USR" --password-stdin
+                '''
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                sh '''
+                    # Optional cleanup of local container/image
+                    docker stop myapp4-web || true
+                    docker rm myapp4-web || true
+                    docker rmi bassam2080/myapp4-web || true
+
+                    # Build and push image
+                    docker build -t bassam2080/myapp4-web .
+                    docker push bassam2080/myapp4-web
