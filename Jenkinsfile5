@@ -34,7 +34,7 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 // *** USE EXACTLY THE ID FROM THE SNIPPET GENERATOR HERE ***
-                sshagent (credentials: ['AmzonEC2Webserver2']) {
+                sshagent (credentials: ['3.238.125.170']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
 # -------- Amazon Linux setup --------
