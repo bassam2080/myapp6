@@ -1,11 +1,10 @@
- pipeline {
+pipeline {
     agent any
 
     environment {
         // DockerHub username/password credential
         DOCKERHUB_CREDENTIALS = credentials('DockerHub')
 
-        // EC2 connection details
         EC2_HOST = 'ec2-3-238-125-170.compute-1.amazonaws.com'
         EC2_USER = 'ec2-user'
     }
@@ -22,12 +21,10 @@
         stage('Build & Push Docker Image') {
             steps {
                 sh '''
-                    # Optional cleanup of local container/image
                     docker stop myapp4-web || true
                     docker rm myapp4-web || true
                     docker rmi bassam2080/myapp4-web || true
 
-                    # Build and push image
                     docker build -t bassam2080/myapp4-web .
                     docker push bassam2080/myapp4-web
                 '''
@@ -36,16 +33,13 @@
 
         stage('Deploy to EC2') {
             steps {
-                // Use the SSH credential with ID: AmzonEC2Webserver2
-                sshagent(['AmzonEC2Webserver2']) {
+                // *** USE EXACTLY THE ID FROM THE SNIPPET GENERATOR HERE ***
+                sshagent (credentials: ['AmzonEC2Webserver2']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
 # -------- Amazon Linux setup --------
-
-# Update packages
 sudo yum update -y
 
-# Install Docker if not installed
 if ! command -v docker &> /dev/null
 then
     if command -v amazon-linux-extras &> /dev/null; then
@@ -53,19 +47,13 @@ then
     else
         sudo yum install -y docker
     fi
-
     sudo systemctl start docker
     sudo systemctl enable docker
 fi
 
-# Pull latest image from DockerHub
 sudo docker pull bassam2080/myapp4-web
-
-# Stop and remove existing container if it exists
 sudo docker stop myapp-container || true
 sudo docker rm myapp-container || true
-
-# Run new container
 sudo docker run -d --name myapp-container -p 5000:80 bassam2080/myapp4-web
 EOF
                     '''
