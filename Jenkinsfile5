@@ -1,5 +1,4 @@
-
-pipeline {
+ pipeline {
     agent any
 
     environment {
@@ -31,3 +30,59 @@ pipeline {
                     # Build and push image
                     docker build -t bassam2080/myapp4-web .
                     docker push bassam2080/myapp4-web
+                '''
+            }
+        }
+
+        stage('Deploy to EC2') {
+            steps {
+                // Use the SSH credential with ID: AmzonEC2Webserver2
+                sshagent(['AmzonEC2Webserver2']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
+# -------- Amazon Linux setup --------
+
+# Update packages
+sudo yum update -y
+
+# Install Docker if not installed
+if ! command -v docker &> /dev/null
+then
+    if command -v amazon-linux-extras &> /dev/null; then
+        sudo amazon-linux-extras install docker -y
+    else
+        sudo yum install -y docker
+    fi
+
+    sudo systemctl start docker
+    sudo systemctl enable docker
+fi
+
+# Pull latest image from DockerHub
+sudo docker pull bassam2080/myapp4-web
+
+# Stop and remove existing container if it exists
+sudo docker stop myapp-container || true
+sudo docker rm myapp-container || true
+
+# Run new container
+sudo docker run -d --name myapp-container -p 5000:80 bassam2080/myapp4-web
+EOF
+                    '''
+                }
+            }
+        }
+
+        stage('Clean') {
+            steps {
+                echo "Cleaning up..."
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed."
+        }
+    }
+}
