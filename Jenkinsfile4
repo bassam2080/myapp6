@@ -32,7 +32,7 @@
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(['EC2_SSH_CREDENTIALS']) { // Use the correct ID of your SSH credentials
+                sshagent(['AmzonEC2Webserver2']) { // Use the correct ID of your SSH credentials
                     sh '''
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
 # Update and upgrade packages
